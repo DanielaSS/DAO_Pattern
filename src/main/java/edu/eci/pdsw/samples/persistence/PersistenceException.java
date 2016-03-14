@@ -24,7 +24,7 @@ public class PersistenceException extends Exception {
     
     public static final String PACIENTE_NO_EXISTENTE="El paciente con el tipo y número de Id no se encuentra en la base de datos";
     public static final String PACIENTE_EXISTENTE="El paciente con el tipo y número de Id ya se encuentra en la base de datos";
-    
+
     public PersistenceException(String message) {
         super(message);
     }

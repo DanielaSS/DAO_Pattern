@@ -25,6 +25,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.*;
 
 /**
  *
@@ -53,7 +54,7 @@ public class JDBCDaoPaciente implements DaoPaciente {
             ps.setInt(1, idpaciente);
             ps.setString(2, tipoid);
             ResultSet rs=ps.executeQuery();
-            if(!rs.next())throw new PersistenceException("El paciente no existe");
+            if(!rs.next())throw new PersistenceException(PersistenceException.PACIENTE_NO_EXISTENTE);
             Paciente ans=new Paciente(idpaciente, tipoid, rs.getString(3), rs.getDate(4));
             return ans;
         } catch (SQLException ex) {
@@ -65,14 +66,40 @@ public class JDBCDaoPaciente implements DaoPaciente {
     @Override
     public void save(Paciente p) throws PersistenceException {
         PreparedStatement ps;
-        /*try {
-        
-            
-        } catch (SQLException ex) {
-            throw new PersistenceException("An error ocurred while loading a product.",ex);
-        }*/
-        
-        throw new RuntimeException("No se ha implementado el metodo 'Save' del DAOPAcienteJDBC");
+        try {
+            String query="SELECT * from PACIENTES WHERE id=? AND tipo_id=?";
+            ps=con.prepareStatement(query);
+            ps.setInt(1, p.getId());
+            ps.setString(2, p.getTipo_id());
+            ResultSet rs=ps.executeQuery();
+            if(!rs.next()){
+                String insertarPaciente="INSERT INTO PACIENTES VALUES (?,?,?,?)";
+                ps=con.prepareStatement(insertarPaciente);
+                ps.setInt(1,p.getId());
+                ps.setString(2, p.getTipo_id());
+                ps.setString(3, p.getNombre());
+                ps.setDate(4, p.getFechaNacimiento());
+                ps.execute();
+            }else throw new PersistenceException(PersistenceException.PACIENTE_EXISTENTE); 
+            //Set<Consulta> setConsultas=p.getConsultas();
+            String insertConsultas="INSERT INTO CONSULTAS VALUES (?,?,?,?,?)";
+            ps=con.prepareStatement(insertConsultas);
+            int n=1;
+            for(Consulta c :  p.getConsultas()){
+                ps.setInt(1, c.getId());
+                ps.setDate(2,c.getFechayHora());
+                ps.setString(3,c.getResumen());
+                ps.setInt(4, p.getId());
+                ps.setString(5, p.getTipo_id());  
+                ps.execute();
+                //n++;
+                //System.out.println("Paso"+c.toString());
+            }
+        } catch (SQLException e) {
+            System.out.println(e);
+            throw new PersistenceException("An error ocurred while saving a product.",e);
+        }
+        //throw new RuntimeException("No se ha implementado el metodo 'Save' del DAOPAcienteJDBC");
 
     }
 

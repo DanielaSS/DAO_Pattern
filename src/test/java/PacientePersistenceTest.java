@@ -41,7 +41,7 @@ public class PacientePersistenceTest {
     //1         DAOPaciente.save()      Paciente nuevo que se registra con mas de una consulta
     @Test
     public void classEquivRegistroPacienteMasDeUnaConsulta(){
-        System.out.println("Prueba 1");
+        System.out.println("Prueba 1 Paciente mas de una consulta");
         InputStream input = null;
         input = ClassLoader.getSystemResourceAsStream("applicationconfig_test.properties");
         Properties properties=new Properties();
@@ -79,6 +79,7 @@ public class PacientePersistenceTest {
             ps.setString(2, "CC");
             ResultSet rs=ps.executeQuery();
             boolean bandera=rs.next();
+            daof.endSession();
             if(!bandera){
                 fail(PersistenceException.PACIENTE_NO_EXISTENTE);
             }
@@ -86,7 +87,7 @@ public class PacientePersistenceTest {
                 assertTrue(paciente.getNombre().equals(rs.getString(1)) && paciente.getFechaNacimiento().equals(rs.getDate(2))&& (rs.getString(5).equals("Martin lo subio")||rs.getString(5).equals("Ahora carlos lo subio")));
                 bandera=rs.next();
             }
-            daof.endSession();
+            
         } catch (PersistenceException | SQLException ex) {
             try {
                 daof.endSession();
@@ -99,7 +100,7 @@ public class PacientePersistenceTest {
     //2         DAOPaciente.save()      Paciente nuevo que se registra sin consultas
     @Test
     public void classEquivRegistroPacienteSinConsultas(){
-        System.out.println("Prueba 2");
+        System.out.println("Prueba 2 Paciente sin consultas");
         InputStream input = null;
         input = ClassLoader.getSystemResourceAsStream("applicationconfig_test.properties");
         Properties properties=new Properties();
@@ -130,13 +131,14 @@ public class PacientePersistenceTest {
             ps.setString(2, "CE");
             ResultSet rs=ps.executeQuery();
             boolean bandera=rs.next();
+            daof.endSession();
             if(!bandera){
                 fail("No retorno nada la consulta");
             }
             else{
                 assertTrue(rs.getString(1).equals("Casvad") && rs.getDate(2).equals(Date.valueOf("2005-08-15")));
             }            
-            daof.endSession();
+            
         } catch (PersistenceException | SQLException ex) {
             try {
                 daof.endSession();
@@ -182,10 +184,12 @@ public class PacientePersistenceTest {
             ps.setInt(1, 12);
             ps.setString(2, "CC");
             ResultSet rs=ps.executeQuery();
+            
             if(!rs.next()){
                 fail(PersistenceException.PACIENTE_NO_EXISTENTE);
             }else{
-                assertTrue(rs.getString(1).equals(unaConsulta.getResumen()) && rs.getDate(2).equals(unaConsulta.getFechayHora()));
+                
+                assertTrue("No fueron equivalentes",rs.getString(5).equals(unaConsulta.getResumen()) && rs.getDate(4).equals(unaConsulta.getFechayHora()));
             }
             daof.endSession();
         } catch (SQLException | PersistenceException ex) {
@@ -199,7 +203,7 @@ public class PacientePersistenceTest {
     }
     //4 	DAOPaciente.save() 	Paciente nuevo YA existente que se registra con más de una consulta
     @Test
-    public void classEquivSaveNuevoPacient(){
+    public void classEquivPacienteRepetido(){
         System.out.println("Prueba 4, paciente nuevo YA existente que se registra con más de una consulta");
         InputStream input = null;
         input = ClassLoader.getSystemResourceAsStream("applicationconfig_test.properties");
@@ -213,8 +217,10 @@ public class PacientePersistenceTest {
         try{
             daof.beginSession();
             DaoPaciente persistenciaPaciente=daof.getDaoPaciente();
-            Paciente unPaciente=new Paciente(5,"CC","Maria alejandra Gallego",Date.valueOf("1999-20-30"));
+            Paciente unPaciente=new Paciente(5,"CC","Maria alejandra Gallego",Date.valueOf("1999-01-30"));
+            //System.out.println("Paso");
             persistenciaPaciente.save(unPaciente);
+            //System.out.println("Paso");
             Consulta unaConsulta=new Consulta(Date.valueOf("2016-01-26"),"Alergia a picadura de abeja");
             Consulta dosConsulta=new Consulta(Date.valueOf("2016-01-27"),"Revision picadura abeja");
             Consulta tresConsulta=new Consulta(Date.valueOf("2016-02-21"),"Revision efecto de los antinflamatorios");
@@ -223,15 +229,17 @@ public class PacientePersistenceTest {
             setConsultas.add(dosConsulta);
             setConsultas.add(tresConsulta);
             unPaciente.setConsultas(setConsultas);
-            persistenciaPaciente.save(unPaciente);
+            //System.out.println("Entra 2");
+            persistenciaPaciente.save(unPaciente);          
             fail("No lanzo excepcion");
-        } catch (PersistenceException ex) {
-            assertEquals(ex.getMessage(), PersistenceException.PACIENTE_EXISTENTE);
+        } catch (Exception ex) {
             try {
                 daof.endSession();
             } catch (PersistenceException ex1) {
                 fail("Error al cerrar");
             }
+            System.out.println(ex);
+            assertEquals(ex.getMessage(), PersistenceException.PACIENTE_EXISTENTE);
         } 
     }
 
