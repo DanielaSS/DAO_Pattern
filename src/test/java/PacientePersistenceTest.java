@@ -30,10 +30,6 @@ import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import junit.framework.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -42,26 +38,6 @@ import static org.junit.Assert.*;
  * @author hcadavid
  */
 public class PacientePersistenceTest {
-    //0
-    @Test
-    public void databaseConnectionTest() throws IOException, PersistenceException{
-        System.out.println("Prueba 0");
-        InputStream input = null;
-        input = ClassLoader.getSystemResourceAsStream("applicationconfig_test.properties");
-        Properties properties=new Properties();
-        properties.load(input);
-        
-        DaoFactory daof=DaoFactory.getInstance(properties);
-        
-        daof.beginSession();
-        
-        //IMPLEMENTACION DE LAS PRUEBAS
-        //fail("Pruebas no implementadas");
-            
-
-        daof.commitTransaction();
-        daof.endSession();        
-    }
     //1         DAOPaciente.save()      Paciente nuevo que se registra con mas de una consulta
     @Test
     public void classEquivRegistroPacienteMasDeUnaConsulta(){
@@ -104,16 +80,14 @@ public class PacientePersistenceTest {
             ResultSet rs=ps.executeQuery();
             boolean bandera=rs.next();
             if(!bandera){
-                fail("No retorno nada la consulta");
+                fail(PersistenceException.PACIENTE_NO_EXISTENTE);
             }
             while(bandera){
-                assertEquals("Martin no subir", rs.getString(1));
-                assertEquals(Date.valueOf("2005-08-15"), rs.getDate(2));
-                assertTrue(rs.getString(5).equals("Martin lo subio")||rs.getString(5).equals("Ahora carlos lo subio"));
+                assertTrue(paciente.getNombre().equals(rs.getString(1)) && paciente.getFechaNacimiento().equals(rs.getDate(2))&& (rs.getString(5).equals("Martin lo subio")||rs.getString(5).equals("Ahora carlos lo subio")));
                 bandera=rs.next();
             }
             daof.endSession();
-        } catch (Exception ex) {
+        } catch (PersistenceException | SQLException ex) {
             try {
                 daof.endSession();
                 fail("Lanzo excepcion: "+ex.getMessage());
@@ -160,11 +134,10 @@ public class PacientePersistenceTest {
                 fail("No retorno nada la consulta");
             }
             else{
-                assertEquals("Casvad", rs.getString(1));
-                assertEquals(Date.valueOf("2005-08-15"), rs.getDate(2));
+                assertTrue(rs.getString(1).equals("Casvad") && rs.getDate(2).equals(Date.valueOf("2005-08-15")));
             }            
             daof.endSession();
-        } catch (Exception ex) {
+        } catch (PersistenceException | SQLException ex) {
             try {
                 daof.endSession();
                 fail("Lanzo excepcion: "+ex.getMessage());
@@ -175,42 +148,91 @@ public class PacientePersistenceTest {
         }   
     }
     //3 	DAOPaciente.save() 	Paciente nuevo que se registra con sólo una consulta 	
-    //Dani, hay que modificar la prueba al estilo de las dos primeras, de lo contrario queda sin cerrar
-    //Tambien tienes que hacer una consulta SQL
    @Test
     public void classEquivSaveNuevoPacienteConUnaConsulta(){
+        System.out.println("Prueba 3, paciente nuevo que se registra con solo una consulta");
+        InputStream input = null;
+        input = ClassLoader.getSystemResourceAsStream("applicationconfig_test.properties");
+        Properties properties=new Properties();       
         try {
-            InputStream input = null;
-            input = ClassLoader.getSystemResourceAsStream("applicationconfig_test.properties");
-            Properties properties=new Properties();
             properties.load(input);
-            
-            DaoFactory daof=DaoFactory.getInstance(properties);
-            
+        } catch (IOException ex) {
+            fail("No se cargaron las propiedades");
+        }
+        DaoFactory daof=DaoFactory.getInstance(properties);
+        try{
             daof.beginSession();
-            
-            //IMPLEMENTACION DE LAS PRUEBAS
-            DaoPaciente a=daof.getDaoPaciente();
-            Paciente paciente=new Paciente(1,"CC","Isabel Marin",Date.valueOf("2013-08-15"));
-            Consulta unaConsulta=new Consulta(Date.valueOf("2016-03-03"),"Isa se desmayo");
+            DaoPaciente persistenciaPaciente=daof.getDaoPaciente();
+            Paciente unPaciente=new Paciente(12,"CC","Isabel Marin",Date.valueOf("1990-08-15"));
+            Consulta unaConsulta=new Consulta(Date.valueOf("2016-03-03"),"Golpe en la cabeza por desmayo");
             Set<Consulta> setConsultas=new HashSet<Consulta>();
             setConsultas.add(unaConsulta);
-            paciente.setConsultas(setConsultas);
-            a.save(paciente);
+            unPaciente.setConsultas(setConsultas);
+            persistenciaPaciente.save(unPaciente);
+            daof.commitTransaction();
             
-            daof.commitTransaction(); 
+            //Consultamos al paciente
+            Connection cone=persistenciaPaciente.getCon();
+            String query="select pac.nombre, pac.fecha_nacimiento, con.idCONSULTAS, con.fecha_y_hora, con.resumen "
+                    + "from PACIENTES as pac inner join CONSULTAS as con on con.PACIENTES_id=pac.id "
+                    + "and con.PACIENTES_tipo_id=pac.tipo_id where pac.id=? and pac.tipo_id=?";
+            PreparedStatement ps=cone.prepareStatement(query);
+       
+            //Enviamos datos a la consulta
+            ps.setInt(1, 12);
+            ps.setString(2, "CC");
+            ResultSet rs=ps.executeQuery();
+            if(!rs.next()){
+                fail(PersistenceException.PACIENTE_NO_EXISTENTE);
+            }else{
+                assertTrue(rs.getString(1).equals(unaConsulta.getResumen()) && rs.getDate(2).equals(unaConsulta.getFechayHora()));
+            }
             daof.endSession();
-        } catch (IOException|PersistenceException ex) {
-            
-            fail("Lanzo excepcion: "+ex.getMessage());
-        }
-
+        } catch (SQLException | PersistenceException ex) {
+            try {
+                daof.endSession();
+                fail("Lanzo excepcion: "+ex.getMessage());
+            } catch (PersistenceException ex1) {
+                fail(ex1.getMessage()+"Error al cerrar");
+            }
+        }  
     }
     //4 	DAOPaciente.save() 	Paciente nuevo YA existente que se registra con más de una consulta
     @Test
     public void classEquivSaveNuevoPacient(){
-    
+        System.out.println("Prueba 4, paciente nuevo YA existente que se registra con más de una consulta");
+        InputStream input = null;
+        input = ClassLoader.getSystemResourceAsStream("applicationconfig_test.properties");
+        Properties properties=new Properties();       
+        try {
+            properties.load(input);
+        } catch (IOException ex) {
+            fail("No se cargaron las propiedades");
+        }
+        DaoFactory daof=DaoFactory.getInstance(properties);
+        try{
+            daof.beginSession();
+            DaoPaciente persistenciaPaciente=daof.getDaoPaciente();
+            Paciente unPaciente=new Paciente(5,"CC","Maria alejandra Gallego",Date.valueOf("1999-20-30"));
+            persistenciaPaciente.save(unPaciente);
+            Consulta unaConsulta=new Consulta(Date.valueOf("2016-01-26"),"Alergia a picadura de abeja");
+            Consulta dosConsulta=new Consulta(Date.valueOf("2016-01-27"),"Revision picadura abeja");
+            Consulta tresConsulta=new Consulta(Date.valueOf("2016-02-21"),"Revision efecto de los antinflamatorios");
+            Set<Consulta> setConsultas=new HashSet<Consulta>();
+            setConsultas.add(unaConsulta);
+            setConsultas.add(dosConsulta);
+            setConsultas.add(tresConsulta);
+            unPaciente.setConsultas(setConsultas);
+            persistenciaPaciente.save(unPaciente);
+            fail("No lanzo excepcion");
+        } catch (PersistenceException ex) {
+            assertEquals(ex.getMessage(), PersistenceException.PACIENTE_EXISTENTE);
+            try {
+                daof.endSession();
+            } catch (PersistenceException ex1) {
+                fail("Error al cerrar");
+            }
+        } 
     }
-    
-   
+
 }
