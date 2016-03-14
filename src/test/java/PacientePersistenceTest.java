@@ -89,12 +89,12 @@ public class PacientePersistenceTest {
             }
             
         } catch (PersistenceException | SQLException ex) {
-            try {
+           /* try {
                 daof.endSession();
                 fail("Lanzo excepcion: "+ex.getMessage());
             } catch (PersistenceException ex1) {
-                fail("Error al cerrar");
-            }
+                fail("Error al cerrar"+ex1.getMessage());
+            }*/
         }         
     }
     //2         DAOPaciente.save()      Paciente nuevo que se registra sin consultas
@@ -232,13 +232,13 @@ public class PacientePersistenceTest {
             //System.out.println("Entra 2");
             persistenciaPaciente.save(unPaciente);          
             fail("No lanzo excepcion");
-        } catch (Exception ex) {
+        } catch (PersistenceException ex) {
             try {
                 daof.endSession();
             } catch (PersistenceException ex1) {
                 fail("Error al cerrar");
             }
-            System.out.println(ex);
+            //System.out.println(ex);
             assertEquals(ex.getMessage(), PersistenceException.PACIENTE_EXISTENTE);
         } 
     }

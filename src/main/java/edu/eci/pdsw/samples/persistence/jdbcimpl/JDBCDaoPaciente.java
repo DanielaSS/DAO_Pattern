@@ -73,7 +73,7 @@ public class JDBCDaoPaciente implements DaoPaciente {
             ps.setString(2, p.getTipo_id());
             ResultSet rs=ps.executeQuery();
             if(!rs.next()){
-                String insertarPaciente="INSERT INTO PACIENTES VALUES (?,?,?,?)";
+                String insertarPaciente="INSERT INTO PACIENTES (id,tipo_id,nombre,fecha_nacimiento) VALUES (?,?,?,?)";
                 ps=con.prepareStatement(insertarPaciente);
                 ps.setInt(1,p.getId());
                 ps.setString(2, p.getTipo_id());
@@ -82,15 +82,14 @@ public class JDBCDaoPaciente implements DaoPaciente {
                 ps.execute();
             }else throw new PersistenceException(PersistenceException.PACIENTE_EXISTENTE); 
             //Set<Consulta> setConsultas=p.getConsultas();
-            String insertConsultas="INSERT INTO CONSULTAS VALUES (?,?,?,?,?)";
+            String insertConsultas="INSERT INTO CONSULTAS (fecha_y_hora,resumen,PACIENTES_id,PACIENTES_tipo_id) VALUES (?,?,?,?)";
             ps=con.prepareStatement(insertConsultas);
             int n=1;
             for(Consulta c :  p.getConsultas()){
-                ps.setInt(1, c.getId());
-                ps.setDate(2,c.getFechayHora());
-                ps.setString(3,c.getResumen());
-                ps.setInt(4, p.getId());
-                ps.setString(5, p.getTipo_id());  
+                ps.setDate(1,c.getFechayHora());
+                ps.setString(2,c.getResumen());
+                ps.setInt(3, p.getId());
+                ps.setString(4, p.getTipo_id());  
                 ps.execute();
                 //n++;
                 //System.out.println("Paso"+c.toString());
