@@ -18,11 +18,17 @@
 import edu.eci.pdsw.samples.entities.Consulta;
 import edu.eci.pdsw.samples.entities.Paciente;
 import edu.eci.pdsw.samples.persistence.DaoFactory;
+import edu.eci.pdsw.samples.persistence.DaoPaciente;
 import edu.eci.pdsw.samples.persistence.PersistenceException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Date;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -53,7 +59,7 @@ public class PacientePersistenceTest {
         
         //IMPLEMENTACION DE LAS PRUEBAS
         fail("Pruebas no implementadas");
-
+            
 
         daof.commitTransaction();
         daof.endSession();        
@@ -61,11 +67,36 @@ public class PacientePersistenceTest {
     //3 	DAOPaciente.save() 	Paciente nuevo que se registra con sólo una consulta 	
     @Test
     public void classEquivSaveNuevoPacienteConUnaConsulta(){
-    
+        try {
+            InputStream input = null;
+            input = ClassLoader.getSystemResourceAsStream("applicationconfig_test.properties");
+            Properties properties=new Properties();
+            properties.load(input);
+            
+            DaoFactory daof=DaoFactory.getInstance(properties);
+            
+            daof.beginSession();
+            
+            //IMPLEMENTACION DE LAS PRUEBAS
+            DaoPaciente a=daof.getDaoPaciente();
+            //3 	DAOPaciente.save() 	Paciente nuevo que se registra con sólo una consulta
+            Paciente paciente=new Paciente(1,"CC","Isabel Marin",Date.valueOf("2013-08-15"));
+            Consulta unaConsulta=new Consulta(Date.valueOf("2016-03-03"),"Isa se desmayo");
+            Set<Consulta> setConsultas=new HashSet<Consulta>();
+            setConsultas.add(unaConsulta);
+            paciente.setConsultas(setConsultas);
+            a.save(paciente);
+            
+            daof.commitTransaction(); 
+            daof.endSession();
+        } catch (IOException|PersistenceException ex) {
+            fail("Lanzo excepcion: "+ex.getMessage());
+        } 
+
     }
     //4 	DAOPaciente.save() 	Paciente nuevo YA existente que se registra con más de una consulta
     @Test
-    public void classEquivSaveNuevoPacienteConUnaConsulta(){
+    public void classEquivSaveNuevoPacient(){
     
     }
     
