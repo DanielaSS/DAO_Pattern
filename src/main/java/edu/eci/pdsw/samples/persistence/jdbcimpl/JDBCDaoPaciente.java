@@ -61,7 +61,7 @@ public class JDBCDaoPaciente implements DaoPaciente {
             throw new PersistenceException("An error ocurred while loading a product.",ex);
         }*/
         
-        throw new RuntimeException("No se ha implementado el metodo 'load' del DAOPAcienteJDBC");
+        throw new RuntimeException("No se ha implementado el metodo 'Save' del DAOPAcienteJDBC");
 
     }
 
@@ -73,7 +73,7 @@ public class JDBCDaoPaciente implements DaoPaciente {
         } catch (SQLException ex) {
             throw new PersistenceException("An error ocurred while loading a product.",ex);
         } */
-        throw new RuntimeException("No se ha implementado el metodo 'load' del DAOPAcienteJDBC");
+        throw new RuntimeException("No se ha implementado el metodo 'Update' del DAOPAcienteJDBC");
     }
     
 }

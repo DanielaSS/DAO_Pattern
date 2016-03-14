@@ -58,6 +58,16 @@ public class PacientePersistenceTest {
         daof.commitTransaction();
         daof.endSession();        
     }
+    //3 	DAOPaciente.save() 	Paciente nuevo que se registra con sólo una consulta 	
+    @Test
+    public void classEquivSaveNuevoPacienteConUnaConsulta(){
+    
+    }
+    //4 	DAOPaciente.save() 	Paciente nuevo YA existente que se registra con más de una consulta
+    @Test
+    public void classEquivSaveNuevoPacienteConUnaConsulta(){
+    
+    }
     
     
 }
