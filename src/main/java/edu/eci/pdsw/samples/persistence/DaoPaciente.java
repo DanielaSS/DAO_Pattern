@@ -17,6 +17,7 @@
 package edu.eci.pdsw.samples.persistence;
 
 import edu.eci.pdsw.samples.entities.Paciente;
+import java.sql.Connection;
 
 
 /**
@@ -25,6 +26,7 @@ import edu.eci.pdsw.samples.entities.Paciente;
  */
 public interface DaoPaciente {
 
+    public Connection getCon();
     
     public Paciente load(int id, String tipoid) throws PersistenceException;
     

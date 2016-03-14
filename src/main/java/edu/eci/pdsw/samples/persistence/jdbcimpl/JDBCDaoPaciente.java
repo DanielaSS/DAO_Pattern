@@ -34,6 +34,11 @@ public class JDBCDaoPaciente implements DaoPaciente {
 
     Connection con;
 
+    @Override
+    public Connection getCon() {
+        return con;
+    }
+
     public JDBCDaoPaciente(Connection con) {
         this.con = con;
     }
