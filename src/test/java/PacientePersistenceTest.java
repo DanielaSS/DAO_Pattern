@@ -114,8 +114,8 @@ public class PacientePersistenceTest {
         try {
 
             String query="select pac.nombre, pac.fecha_nacimiento, con.idCONSULTAS, con.fecha_y_hora, con.resumen "
-                    + "from PACIENTES as pac inner join CONSULTAS as con on con.PACIENTES_id=pac.id "
-                    + "and con.PACIENTES_tipo_id=pac.tipo_id where pac.id=? and pac.tipo_id=?";
+                    + "from PACIENTES as pac left join CONSULTAS as con on con.PACIENTES_id=pac.id "
+                    + "and con.PACIENTES_tipo_id=pac.tipo_id where pac.id=? and pac.tipo_id=? OR con.idCONSULTAS=NULL";
             daof.beginSession();
             
             //IMPLEMENTACION DE LAS PRUEBAS
@@ -131,22 +131,19 @@ public class PacientePersistenceTest {
             ps.setString(2, "CE");
             ResultSet rs=ps.executeQuery();
             boolean bandera=rs.next();
+            String ans1=rs.getString(1);
+            Date ans2=rs.getDate(2);
             daof.endSession();
             if(!bandera){
                 fail("No retorno nada la consulta");
             }
             else{
-                assertTrue(rs.getString(1).equals("Casvad") && rs.getDate(2).equals(Date.valueOf("2005-08-15")));
+                System.out.println(ans1+" "+ans2);
+                assertTrue("No son equivalentes","Casvad".equals(ans1) && Date.valueOf("2000-08-15").equals(ans2));
             }            
             
         } catch (PersistenceException | SQLException ex) {
-            try {
-                daof.endSession();
-                fail("Lanzo excepcion: "+ex.getMessage());
-            } catch (PersistenceException ex1) {
-                System.out.println("Error al cerrar");
-                fail();
-            }
+            fail(ex.getMessage());
         }   
     }
     //3 	DAOPaciente.save() 	Paciente nuevo que se registra con sólo una consulta 	
@@ -187,8 +184,7 @@ public class PacientePersistenceTest {
             
             if(!rs.next()){
                 fail(PersistenceException.PACIENTE_NO_EXISTENTE);
-            }else{
-                
+            }else{               
                 assertTrue("No fueron equivalentes",rs.getString(5).equals(unaConsulta.getResumen()) && rs.getDate(4).equals(unaConsulta.getFechayHora()));
             }
             daof.endSession();
